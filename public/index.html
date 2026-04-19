@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="de" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manga-/Anime-Bibliothek</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class"
+    };
+  </script>
+</head>
+<body class="min-h-full bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors">
+  <div class="max-w-7xl mx-auto px-4 py-8">
+    <header class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between mb-8">
+      <div class="space-y-3">
+        <div class="inline-flex items-center gap-2 rounded-full bg-indigo-100 px-3 py-1 text-sm font-medium text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-200">
+          📚 Full-Stack Bibliothek
+        </div>
+        <h1 class="text-4xl font-bold tracking-tight">Anime- und Manga-Bibliothek</h1>
+        <p class="max-w-2xl text-slate-600 dark:text-slate-300">
+          Verwalte Anime und Manga, filtere nach Genre, bearbeite Einträge ohne Seitenreload
+          und nutze den QR-Code direkt für das Testat.
+        </p>
+      </div>
+
+      <div class="flex flex-col gap-4">
+        <button
+          id="darkModeButton"
+          type="button"
+          class="self-start rounded-xl bg-slate-900 px-4 py-2 text-white hover:bg-slate-700 dark:bg-slate-200 dark:text-slate-900 dark:hover:bg-white transition"
+        >
+          🌙 Dark Mode
+        </button>
+
+        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <p class="text-sm font-semibold text-slate-700 dark:text-slate-200">Testat QR-Code</p>
+          <img
+            src="/images/tcm-qr.png"
+            alt="TCM QR-Code"
+            class="mt-3 w-44 rounded-lg border border-slate-200 dark:border-slate-700"
+          />
+        </div>
+      </div>
+    </header>
+
+    <section class="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:col-span-2">
+        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div class="flex gap-2">
+            <button
+              id="animeTab"
+              type="button"
+              class="rounded-xl bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 transition"
+            >
+              Anime
+            </button>
+            <button
+              id="mangaTab"
+              type="button"
+              class="rounded-xl bg-slate-200 px-4 py-2 text-slate-800 hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700 transition"
+            >
+              Manga
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <input
+              id="searchInput"
+              type="text"
+              placeholder="Suche nach Titel..."
+              class="rounded-xl border-2 border-slate-300 px-4 py-2 outline-none focus:border-indigo-500 dark:border-slate-700 dark:bg-slate-950"
+            />
+            <input
+              id="genreFilter"
+              type="text"
+              placeholder="Genre filtern..."
+              class="rounded-xl border-2 border-slate-300 px-4 py-2 outline-none focus:border-indigo-500 dark:border-slate-700 dark:bg-slate-950"
+            />
+          </div>
+        </div>
+
+        <div id="status" class="mt-4 hidden rounded-xl px-4 py-3 text-sm font-medium"></div>
+      </div>
+
+      <form
+        id="formular"
+        class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+      >
+        <div class="flex items-start justify-between gap-3 mb-4">
+          <div>
+            <h2 id="formTitle" class="text-2xl font-bold">Neuen Eintrag anlegen</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400">
+              Das Formular arbeitet per fetch ohne Reload.
+            </p>
+          </div>
+          <button
+            id="cancelEditButton"
+            type="button"
+            class="hidden rounded-lg border border-slate-300 px-3 py-2 text-sm hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
+          >
+            Bearbeiten abbrechen
+          </button>
+        </div>
+
+        <input id="editId" type="hidden" />
+
+        <div class="grid grid-cols-1 gap-4">
+          <div>
+            <label for="title" class="mb-1 block text-sm font-medium">Titel</label>
+            <input
+              id="title"
+              type="text"
+              required
+              minlength="2"
+              placeholder="z. B. Death Note"
+              class="w-full rounded-xl border-2 border-slate-300 px-4 py-2 outline-none focus:border-indigo-500 invalid:border-red-500 valid:border-green-500 dark:border-slate-700 dark:bg-slate-950"
+            />
+            <p id="titleError" class="mt-1 text-sm text-red-500 hidden"></p>
+          </div>
+
+          <div>
+            <label for="description" class="mb-1 block text-sm font-medium">Beschreibung</label>
+            <textarea
+              id="description"
+              required
+              minlength="5"
+              placeholder="Kurze Beschreibung..."
+              class="min-h-[100px] w-full rounded-xl border-2 border-slate-300 px-4 py-2 outline-none focus:border-indigo-500 invalid:border-red-500 valid:border-green-500 dark:border-slate-700 dark:bg-slate-950"
+            ></textarea>
+            <p id="descriptionError" class="mt-1 text-sm text-red-500 hidden"></p>
+          </div>
+
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div>
+              <label id="countLabel" for="count" class="mb-1 block text-sm font-medium">Episoden</label>
+              <input
+                id="count"
+                type="number"
+                required
+                min="1"
+                placeholder="Anzahl"
+                class="w-full rounded-xl border-2 border-slate-300 px-4 py-2 outline-none focus:border-indigo-500 invalid:border-red-500 valid:border-green-500 dark:border-slate-700 dark:bg-slate-950"
+              />
+              <p id="countError" class="mt-1 text-sm text-red-500 hidden"></p>
+            </div>
+
+            <div>
+              <label for="rating" class="mb-1 block text-sm font-medium">Rating</label>
+              <input
+                id="rating"
+                type="number"
+                required
+                min="1"
+                max="10"
+                placeholder="1-10"
+                class="w-full rounded-xl border-2 border-slate-300 px-4 py-2 outline-none focus:border-indigo-500 invalid:border-red-500 valid:border-green-500 dark:border-slate-700 dark:bg-slate-950"
+              />
+              <p id="ratingError" class="mt-1 text-sm text-red-500 hidden"></p>
+            </div>
+
+            <div>
+              <label for="genre" class="mb-1 block text-sm font-medium">Genre</label>
+              <input
+                id="genre"
+                type="text"
+                required
+                minlength="3"
+                placeholder="z. B. Shonen"
+                class="w-full rounded-xl border-2 border-slate-300 px-4 py-2 outline-none focus:border-indigo-500 invalid:border-red-500 valid:border-green-500 dark:border-slate-700 dark:bg-slate-950"
+              />
+              <p id="genreError" class="mt-1 text-sm text-red-500 hidden"></p>
+            </div>
+          </div>
+        </div>
+
+        <button
+          id="submitButton"
+          type="submit"
+          class="mt-5 w-full rounded-xl bg-indigo-600 px-4 py-3 font-semibold text-white hover:bg-indigo-700 transition"
+        >
+          Eintrag speichern
+        </button>
+      </form>
+    </section>
+
+    <section>
+      <div class="mb-4 flex items-center justify-between">
+        <h2 id="listTitle" class="text-2xl font-bold">Anime-Liste</h2>
+        <span id="countBadge" class="rounded-full bg-slate-200 px-3 py-1 text-sm font-medium dark:bg-slate-800">
+          0 Einträge
+        </span>
+      </div>
+
+      <div
+        id="liste"
+        class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
+      >
+        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          Lade Daten...
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    let aktuellerTyp = "anime";
+
+    const animeTab = document.getElementById("animeTab");
+    const mangaTab = document.getElementById("mangaTab");
+    const liste = document.getElementById("liste");
+    const form = document.getElementById("formular");
+    const formTitle = document.getElementById("formTitle");
+    const submitButton = document.getElementById("submitButton");
+    const cancelEditButton = document.getElementById("cancelEditButton");
+    const editIdInput = document.getElementById("editId");
+    const listTitle = document.getElementById("listTitle");
+    const countBadge = document.getElementById("countBadge");
+    const countLabel = document.getElementById("countLabel");
+    const statusBox = document.getElementById("status");
+    const darkModeButton = document.getElementById("darkModeButton");
+    const searchInput = document.getElementById("searchInput");
+    const genreFilter = document.getElementById("genreFilter");
+
+    const fields = {
+      title: document.getElementById("title"),
+      description: document.getElementById("description"),
+      count: document.getElementById("count"),
+      rating: document.getElementById("rating"),
+      genre: document.getElementById("genre")
+    };
+
+    const errorBoxes = {
+      title: document.getElementById("titleError"),
+      description: document.getElementById("descriptionError"),
+      count: document.getElementById("countError"),
+      rating: document.getElementById("ratingError"),
+      genre: document.getElementById("genreError")
+    };
+
+    function apiBasis() {
+      return `/api/${aktuellerTyp}`;
+    }
+
+    function zeigeStatus(text, type = "success") {
+      statusBox.textContent = text;
+      statusBox.classList.remove("hidden", "bg-green-100", "text-green-800", "bg-red-100", "text-red-800", "dark:bg-green-900/30", "dark:text-green-200", "dark:bg-red-900/30", "dark:text-red-200");
+
+      if (type === "success") {
+        statusBox.classList.add("bg-green-100", "text-green-800", "dark:bg-green-900/30", "dark:text-green-200");
+      } else {
+        statusBox.classList.add("bg-red-100", "text-red-800", "dark:bg-red-900/30", "dark:text-red-200");
+      }
+    }
+
+    function setzeDarkMode(isDark) {
+      document.documentElement.classList.toggle("dark", isDark);
+      localStorage.setItem("darkMode", isDark ? "dark" : "light");
+      darkModeButton.textContent = isDark ? "☀️ Light Mode" : "🌙 Dark Mode";
+    }
+
+    function ladeDarkMode() {
+      const gespeichert = localStorage.getItem("darkMode");
+      setzeDarkMode(gespeichert === "dark");
+    }
+
+    darkModeButton.addEventListener("click", () => {
+      setzeDarkMode(!document.documentElement.classList.contains("dark"));
+    });
+
+    function aktualisiereTabs() {
+      const animeAktiv = aktuellerTyp === "anime";
+
+      animeTab.className = animeAktiv
+        ? "rounded-xl bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 transition"
+        : "rounded-xl bg-slate-200 px-4 py-2 text-slate-800 hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700 transition";
+
+      mangaTab.className = !animeAktiv
+        ? "rounded-xl bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 transition"
+        : "rounded-xl bg-slate-200 px-4 py-2 text-slate-800 hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700 transition";
+
+      listTitle.textContent = animeAktiv ? "Anime-Liste" : "Manga-Liste";
+      countLabel.textContent = animeAktiv ? "Episoden" : "Kapitel";
+    }
+
+    animeTab.addEventListener("click", () => {
+      aktuellerTyp = "anime";
+      resetForm();
+      aktualisiereTabs();
+      ladeDaten();
+    });
+
+    mangaTab.addEventListener("click", () => {
+      aktuellerTyp = "manga";
+      resetForm();
+      aktualisiereTabs();
+      ladeDaten();
+    });
+
+    function baueQuery() {
+      const params = new URLSearchParams();
+
+      if (searchInput.value.trim()) {
+        params.set("search", searchInput.value.trim());
+      }
+
+      if (genreFilter.value.trim()) {
+        params.set("genre", genreFilter.value.trim());
+      }
+
+      const query = params.toString();
+      return query ? `?${query}` : "";
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function erstelleKarte(item) {
+      const anzahlLabel = aktuellerTyp === "anime" ? "Episoden" : "Kapitel";
+      const anzahl = aktuellerTyp === "anime" ? item.episodes : item.chapters;
+
+      return `
+        <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <h3 class="text-xl font-semibold">${escapeHtml(item.title)}</h3>
+              <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                ${escapeHtml(item.description)}
+              </p>
+            </div>
+            <span class="rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
+              ⭐ ${item.rating}/10
+            </span>
+          </div>
+
+          <div class="mt-4 flex flex-wrap gap-2">
+            <span class="rounded-full bg-indigo-100 px-3 py-1 text-sm text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200">
+              ${escapeHtml(item.genre)}
+            </span>
+            <span class="rounded-full bg-slate-200 px-3 py-1 text-sm text-slate-800 dark:bg-slate-800 dark:text-slate-100">
+              ${anzahlLabel}: ${anzahl}
+            </span>
+          </div>
+
+          <div class="mt-5 flex gap-2">
+            <button
+              type="button"
+              onclick="bearbeiteEintrag(${item.id})"
+              class="rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition"
+            >
+              Bearbeiten
+            </button>
+            <button
+              type="button"
+              onclick="loescheEintrag(${item.id})"
+              class="rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 transition"
+            >
+              Löschen
+            </button>
+          </div>
+        </article>
+      `;
+    }
+
+    async function ladeDaten() {
+      try {
+        const response = await fetch(`${apiBasis()}${baueQuery()}`);
+
+        if (!response.ok) {
+          throw new Error("Daten konnten nicht geladen werden.");
+        }
+
+        const items = await response.json();
+        countBadge.textContent = `${items.length} Einträge`;
+
+        if (items.length === 0) {
+          liste.innerHTML = `
+            <div class="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 md:col-span-2 xl:col-span-3">
+              Keine Einträge gefunden.
+            </div>
+          `;
+          return;
+        }
+
+        liste.innerHTML = items.map(erstelleKarte).join("");
+      } catch (error) {
+        liste.innerHTML = `
+          <div class="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300 md:col-span-2 xl:col-span-3">
+            Fehler beim Laden der Daten.
+          </div>
+        `;
+      }
+    }
+
+    function resetForm() {
+      form.reset();
+      editIdInput.value = "";
+      formTitle.textContent = "Neuen Eintrag anlegen";
+      submitButton.textContent = "Eintrag speichern";
+      cancelEditButton.classList.add("hidden");
+
+      Object.values(errorBoxes).forEach((box) => {
+        box.textContent = "";
+        box.classList.add("hidden");
+      });
+    }
+
+    cancelEditButton.addEventListener("click", resetForm);
+
+    async function bearbeiteEintrag(id) {
+      try {
+        const response = await fetch(`${apiBasis()}/${id}`);
+        if (!response.ok) {
+          throw new Error("Eintrag konnte nicht geladen werden.");
+        }
+
+        const item = await response.json();
+
+        editIdInput.value = item.id;
+        fields.title.value = item.title;
+        fields.description.value = item.description;
+        fields.count.value = aktuellerTyp === "anime" ? item.episodes : item.chapters;
+        fields.rating.value = item.rating;
+        fields.genre.value = item.genre;
+
+        formTitle.textContent = "Eintrag bearbeiten";
+        submitButton.textContent = "Änderungen speichern";
+        cancelEditButton.classList.remove("hidden");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } catch (error) {
+        zeigeStatus("Bearbeiten fehlgeschlagen.", "error");
+      }
+    }
+
+    async function loescheEintrag(id) {
+      const bestaetigt = confirm("Soll dieser Eintrag wirklich gelöscht werden?");
+      if (!bestaetigt) return;
+
+      try {
+        const response = await fetch(`${apiBasis()}/${id}`, {
+          method: "DELETE"
+        });
+
+        if (!response.ok && response.status !== 204) {
+          throw new Error("Löschen fehlgeschlagen.");
+        }
+
+        zeigeStatus("Eintrag gelöscht.");
+        resetForm();
+        ladeDaten();
+      } catch (error) {
+        zeigeStatus("Löschen fehlgeschlagen.", "error");
+      }
+    }
+
+    window.bearbeiteEintrag = bearbeiteEintrag;
+    window.loescheEintrag = loescheEintrag;
+
+    function validierungsText(input) {
+      if (input.validity.valueMissing) return "Dieses Feld ist erforderlich.";
+      if (input.validity.tooShort) return `Mindestens ${input.minLength} Zeichen eingeben.`;
+      if (input.validity.rangeUnderflow) return `Der Wert muss mindestens ${input.min} sein.`;
+      if (input.validity.rangeOverflow) return `Der Wert darf höchstens ${input.max} sein.`;
+      return "";
+    }
+
+    function pruefeFeld(name, input) {
+      const errorBox = errorBoxes[name];
+      const text = validierungsText(input);
+
+      if (text) {
+        errorBox.textContent = text;
+        errorBox.classList.remove("hidden");
+        return false;
+      }
+
+      errorBox.textContent = "";
+      errorBox.classList.add("hidden");
+      return true;
+    }
+
+    Object.entries(fields).forEach(([name, input]) => {
+      input.addEventListener("input", () => pruefeFeld(name, input));
+      input.addEventListener("blur", () => pruefeFeld(name, input));
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const alleGueltig = Object.entries(fields).every(([name, input]) => pruefeFeld(name, input));
+      if (!alleGueltig || !form.reportValidity()) {
+        zeigeStatus("Bitte korrigiere die markierten Felder.", "error");
+        return;
+      }
+
+      const payload = {
+        title: fields.title.value.trim(),
+        description: fields.description.value.trim(),
+        rating: Number(fields.rating.value),
+        genre: fields.genre.value.trim(),
+        ...(aktuellerTyp === "anime"
+          ? { episodes: Number(fields.count.value) }
+          : { chapters: Number(fields.count.value) })
+      };
+
+      const istBearbeitung = Boolean(editIdInput.value);
+      const url = istBearbeitung ? `${apiBasis()}/${editIdInput.value}` : apiBasis();
+      const method = istBearbeitung ? "PUT" : "POST";
+
+      try {
+        const response = await fetch(url, {
+          method,
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          throw new Error("Speichern fehlgeschlagen.");
+        }
+
+        zeigeStatus(istBearbeitung ? "Eintrag aktualisiert." : "Eintrag hinzugefügt.");
+        resetForm();
+        ladeDaten();
+      } catch (error) {
+        zeigeStatus("Speichern fehlgeschlagen.", "error");
+      }
+    });
+
+    let suchTimer;
+
+    function filterNeuLaden() {
+      clearTimeout(suchTimer);
+      suchTimer = setTimeout(() => {
+        ladeDaten();
+      }, 250);
+    }
+
+    searchInput.addEventListener("input", filterNeuLaden);
+    genreFilter.addEventListener("input", filterNeuLaden);
+
+    ladeDarkMode();
+    aktualisiereTabs();
+    ladeDaten();
+  </script>
+</body>
+</html>
